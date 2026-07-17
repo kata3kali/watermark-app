@@ -539,3 +539,31 @@ input[type='checkbox'] {
     color: #fff;
   }
 }
+
+/* The hidden attribute must always win over display rules above. */
+[hidden] {
+  display: none !important;
+}
+
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-row .file-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.logo-row .btn-like {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-link.danger {
+  color: var(--danger);
+  flex: none;
+}

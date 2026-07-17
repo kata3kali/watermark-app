@@ -34,7 +34,8 @@ const config = {
     grid: 'br',
     marginPct: 4,
     custom: { x: 0.5, y: 0.5 },
-    gapPct: 20
+    gapPct: 20,
+    tilePattern: 'staggered' // 'staggered' | 'grid' | 'diagonal'
   },
   output: { format: 'original', quality: 0.9 }
 };
@@ -55,6 +56,7 @@ const controls = initControls({
   config,
   onChange: () => preview.render(),
   onLogoFile: loadLogo,
+  onLogoClear: clearLogo,
   onApply: applyToAll
 });
 
@@ -122,10 +124,18 @@ async function loadLogo(file) {
     }
     if (state.logo?.bitmap) state.logo.bitmap.close();
     state.logo = { bitmap, blob };
+    controls.setLogoLoaded(file.name);
     preview.render();
   } catch (err) {
     alert('Could not load logo: ' + err);
   }
+}
+
+function clearLogo() {
+  if (state.logo?.bitmap) state.logo.bitmap.close();
+  state.logo = null;
+  controls.setLogoLoaded(null);
+  preview.render();
 }
 
 function loadHtmlImage(file) {

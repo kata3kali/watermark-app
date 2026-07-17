@@ -59,10 +59,13 @@ export function drawWatermark(ctx, w, h, config, assets = {}) {
     const stepX = m.width + gap;
     const stepY = m.height + Math.max(gap * 0.6, m.height * 0.4);
     const half = Math.hypot(w, h) / 2 + Math.max(stepX, stepY);
+    const pattern = pos.tilePattern || 'staggered';
     let row = 0;
     for (let y = -half; y <= half; y += stepY, row++) {
-      const offset = row % 2 === 1 ? stepX / 2 : 0;
-      for (let x = -half + offset; x <= half; x += stepX) {
+      let offset = 0;
+      if (pattern === 'staggered') offset = row % 2 === 1 ? stepX / 2 : 0;
+      else if (pattern === 'diagonal') offset = (row * stepX) / 3 % stepX;
+      for (let x = -half - offset; x <= half; x += stepX) {
         drawUnit(ctx, x, y, 0, config, assets, m);
       }
     }

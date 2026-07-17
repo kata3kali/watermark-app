@@ -7,10 +7,11 @@ const $ = (id) => document.getElementById(id);
  *   config           — live config object (mutated in place)
  *   onChange()       — called after any config mutation
  *   onLogoFile(file) — user picked a logo file
+ *   onLogoClear()    — user removed the selected logo
  *   onApply()        — "Apply to all & Download" clicked
  * }
  */
-export function initControls({ config, onChange, onLogoFile, onApply }) {
+export function initControls({ config, onChange, onLogoFile, onLogoClear, onApply }) {
   // --- type toggle ---
   const typeText = $('type-text');
   const typeLogo = $('type-logo');
@@ -54,12 +55,11 @@ export function initControls({ config, onChange, onLogoFile, onApply }) {
   const logoInput = $('logo-input');
   logoInput.addEventListener('change', () => {
     const file = logoInput.files[0];
-    if (file) {
-      $('logo-name').textContent = file.name;
-      onLogoFile(file);
-    }
+    if (file) onLogoFile(file);
     logoInput.value = '';
   });
+  const logoClear = $('logo-clear');
+  logoClear.addEventListener('click', () => onLogoClear());
   bind('logo-scale', (el) => (config.logo.scalePct = +el.value), 'logo-scale-out', (v) => `${v}%`);
   bind('logo-opacity', (el) => (config.logo.opacity = +el.value / 100), 'logo-opacity-out', (v) => `${v}%`);
   bind('logo-rotation', (el) => (config.logo.rotation = +el.value), 'logo-rotation-out', (v) => `${v}°`);
@@ -69,6 +69,7 @@ export function initControls({ config, onChange, onLogoFile, onApply }) {
   const tileCheck = $('wm-tile');
   const customNote = $('pos-custom-note');
   const tileGapLabel = $('tile-gap-label');
+  const tilePatternLabel = $('tile-pattern-label');
 
   const syncPositionUI = () => {
     const mode = config.position.mode;
@@ -81,6 +82,7 @@ export function initControls({ config, onChange, onLogoFile, onApply }) {
     tileCheck.checked = mode === 'tile';
     customNote.hidden = mode !== 'custom';
     tileGapLabel.hidden = mode !== 'tile';
+    tilePatternLabel.hidden = mode !== 'tile';
   };
 
   gridButtons.forEach((b) =>
@@ -100,6 +102,7 @@ export function initControls({ config, onChange, onLogoFile, onApply }) {
 
   bind('wm-margin', (el) => (config.position.marginPct = +el.value), 'wm-margin-out', (v) => `${v}%`);
   bind('wm-gap', (el) => (config.position.gapPct = +el.value), 'wm-gap-out', (v) => `${v}%`);
+  bind('wm-tile-pattern', (el) => (config.position.tilePattern = el.value));
 
   // --- output ---
   const qualityLabel = $('quality-label');
@@ -119,6 +122,10 @@ export function initControls({ config, onChange, onLogoFile, onApply }) {
     syncPositionUI,
     setApplyEnabled(enabled) {
       applyBtn.disabled = !enabled;
+    },
+    setLogoLoaded(name) {
+      $('logo-name').textContent = name ?? 'Upload logo (PNG/SVG)…';
+      logoClear.hidden = !name;
     }
   };
 }
