@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111418" />
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+  <title>Watermark Tool</title>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <h1>Watermark Tool</h1>
+      <span class="tagline">Runs 100% in your browser — images never leave your device.</span>
+    </header>
+
+    <main class="layout">
+      <!-- Files panel -->
+      <aside class="panel files-panel">
+        <div id="dropzone" class="dropzone" tabindex="0">
+          <p><strong>Drop images here</strong></p>
+          <p class="muted">or click to browse</p>
+          <p class="muted small">JPG · PNG · WebP — multiple files OK</p>
+          <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden />
+        </div>
+        <div class="files-header">
+          <span id="file-count" class="muted small"></span>
+          <button id="clear-all" class="btn-link" hidden>Clear all</button>
+        </div>
+        <div id="thumbs" class="thumbs"></div>
+      </aside>
+
+      <!-- Preview -->
+      <section class="panel preview-panel">
+        <div id="preview-wrap" class="preview-wrap">
+          <p id="preview-empty" class="preview-empty muted">Load images to start.<br/>The selected image previews here with the watermark applied live. Drag the watermark to reposition it.</p>
+          <canvas id="preview-canvas" hidden></canvas>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <aside class="panel settings-panel">
+        <h2>Watermark</h2>
+
+        <div class="seg" role="tablist">
+          <button id="type-text" class="seg-btn active">Text</button>
+          <button id="type-logo" class="seg-btn">Logo</button>
+        </div>
+
+        <!-- Text options -->
+        <div id="text-options" class="opt-group">
+          <label>Text
+            <input id="wm-text" type="text" value="© Watermark" />
+          </label>
+          <label>Font
+            <select id="wm-font">
+              <option value="Arial, Helvetica, sans-serif" selected>Arial</option>
+              <option value="Verdana, Geneva, sans-serif">Verdana</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="'Times New Roman', Times, serif">Times New Roman</option>
+              <option value="'Courier New', Courier, monospace">Courier New</option>
+              <option value="Impact, 'Arial Black', sans-serif">Impact</option>
+            </select>
+          </label>
+          <label>Size <output id="wm-size-out">6%</output>
+            <input id="wm-size" type="range" min="1" max="30" step="0.5" value="6" />
+          </label>
+          <label>Color
+            <input id="wm-color" type="color" value="#ffffff" />
+          </label>
+          <label>Opacity <output id="wm-opacity-out">50%</output>
+            <input id="wm-opacity" type="range" min="5" max="100" step="1" value="50" />
+          </label>
+          <label>Rotation <output id="wm-rotation-out">0°</output>
+            <input id="wm-rotation" type="range" min="-180" max="180" step="1" value="0" />
+          </label>
+          <label class="check">
+            <input id="wm-outline" type="checkbox" />
+            Outline &amp; shadow (legibility)
+          </label>
+        </div>
+
+        <!-- Logo options -->
+        <div id="logo-options" class="opt-group" hidden>
+          <label class="file-label">
+            <span id="logo-name" class="btn-like">Upload logo (PNG/SVG)…</span>
+            <input id="logo-input" type="file" accept="image/png,image/svg+xml" hidden />
+          </label>
+          <label>Scale <output id="logo-scale-out">20%</output>
+            <input id="logo-scale" type="range" min="3" max="80" step="1" value="20" />
+          </label>
+          <label>Opacity <output id="logo-opacity-out">50%</output>
+            <input id="logo-opacity" type="range" min="5" max="100" step="1" value="50" />
+          </label>
+          <label>Rotation <output id="logo-rotation-out">0°</output>
+            <input id="logo-rotation" type="range" min="-180" max="180" step="1" value="0" />
+          </label>
+        </div>
+
+        <h2>Position</h2>
+        <div class="pos-row">
+          <div id="pos-grid" class="pos-grid">
+            <button data-pos="tl" title="Top left"></button>
+            <button data-pos="tc" title="Top center"></button>
+            <button data-pos="tr" title="Top right"></button>
+            <button data-pos="ml" title="Middle left"></button>
+            <button data-pos="mc" title="Center"></button>
+            <button data-pos="mr" title="Middle right"></button>
+            <button data-pos="bl" title="Bottom left"></button>
+            <button data-pos="bc" title="Bottom center"></button>
+            <button data-pos="br" class="active" title="Bottom right"></button>
+          </div>
+          <div class="pos-side">
+            <label class="check">
+              <input id="wm-tile" type="checkbox" />
+              Tile / repeat
+            </label>
+            <p id="pos-custom-note" class="muted small" hidden>Custom position (dragged)</p>
+          </div>
+        </div>
+        <label>Margin <output id="wm-margin-out">4%</output>
+          <input id="wm-margin" type="range" min="0" max="15" step="0.5" value="4" />
+        </label>
+        <label id="tile-gap-label" hidden>Tile gap <output id="wm-gap-out">20%</output>
+          <input id="wm-gap" type="range" min="0" max="60" step="1" value="20" />
+        </label>
+
+        <h2>Output</h2>
+        <label>Format
+          <select id="out-format">
+            <option value="original" selected>Keep original</option>
+            <option value="jpeg">JPEG</option>
+            <option value="png">PNG</option>
+            <option value="webp">WebP</option>
+          </select>
+        </label>
+        <label id="quality-label" hidden>Quality <output id="out-quality-out">0.9</output>
+          <input id="out-quality" type="range" min="0.5" max="1" step="0.05" value="0.9" />
+        </label>
+
+        <button id="apply-all" class="btn-primary" disabled>Apply to all &amp; Download</button>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Progress overlay -->
+  <div id="progress-overlay" class="overlay" hidden>
+    <div class="overlay-card">
+      <h2>Processing…</h2>
+      <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+      <p id="progress-text" class="muted">0 / 0</p>
+      <button id="progress-cancel" class="btn-link">Cancel</button>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
