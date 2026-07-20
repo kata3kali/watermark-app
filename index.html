@@ -136,6 +136,37 @@
         </label>
 
         <h2>Output</h2>
+        <label>Marketplace preset
+          <select id="out-preset">
+            <option value="" selected>Custom</option>
+            <option value="shopee">Shopee — 1:1, 1600px</option>
+            <option value="tokopedia">Tokopedia — 1:1, 1500px</option>
+            <option value="lazada">Lazada — 1:1, 1000px</option>
+            <option value="tiktokshop">TikTok Shop — 1:1, 1200px</option>
+            <option value="ig-post">Instagram Post — 1:1, 1080px</option>
+            <option value="ig-portrait">Instagram Portrait — 4:5, 1080px</option>
+            <option value="ig-story">Instagram Story — 9:16, 1920px</option>
+          </select>
+        </label>
+        <label>Aspect ratio
+          <select id="out-aspect">
+            <option value="none" selected>Keep original</option>
+            <option value="1:1">Square 1:1</option>
+            <option value="4:5">Portrait 4:5</option>
+            <option value="3:4">Portrait 3:4</option>
+            <option value="16:9">Landscape 16:9</option>
+            <option value="9:16">Story 9:16</option>
+          </select>
+        </label>
+        <label id="aspect-fit-label" hidden>Fit
+          <select id="out-fit">
+            <option value="pad" selected>Pad (add background)</option>
+            <option value="crop">Crop (fill frame)</option>
+          </select>
+        </label>
+        <label id="aspect-pad-label" class="inline" hidden>Background
+          <input id="out-pad-color" type="color" value="#ffffff" />
+        </label>
         <label>Format
           <select id="out-format">
             <option value="original" selected>Keep original</option>
@@ -160,9 +191,26 @@
         <label id="resize-pct-label" hidden>Scale <output id="out-resize-pct-out">75%</output>
           <input id="out-resize-pct" type="range" min="10" max="100" step="5" value="75" />
         </label>
+        <label class="check">
+          <input id="out-target-on" type="checkbox" />
+          Target file size
+        </label>
+        <label id="target-kb-label" hidden>Max size (KB)
+          <input id="out-target-kb" type="number" min="20" max="10000" step="10" value="300" />
+        </label>
+        <label class="check">
+          <input id="out-rename-on" type="checkbox" />
+          Rename sequentially
+        </label>
+        <label id="rename-pat-label" hidden>Pattern <span class="muted small">— {name}, {n}</span>
+          <input id="out-rename-pat" type="text" value="{name}-{n}" />
+        </label>
         <p id="out-dims" class="muted small" hidden></p>
+        <p id="out-estimate" class="muted small" hidden></p>
+        <p class="muted small">Metadata (EXIF/GPS) is stripped automatically on export.</p>
 
         <button id="apply-all" class="btn-primary" disabled>Apply to all &amp; Download</button>
+        <button id="reset-settings" class="btn-link">Reset settings to defaults</button>
       </aside>
     </main>
   </div>

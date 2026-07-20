@@ -45,24 +45,98 @@ export function targetSize(srcW, srcH, resize) {
   };
 }
 
+/** Parse a "w:h" aspect string to a numeric ratio (w/h). Falls back to 1. */
+function parseRatio(str) {
+  const m = /^(\d+(?:\.\d+)?)\s*[:x/]\s*(\d+(?:\.\d+)?)$/.exec(str || '');
+  if (!m) return 1;
+  const a = parseFloat(m[1]);
+  const b = parseFloat(m[2]);
+  return b > 0 ? a / b : 1;
+}
+
+/**
+ * Compute the full output geometry for a source image:
+ *   - aspect: { mode:'none'|'ratio', ratio:'1:1', fit:'crop'|'pad', padColor }
+ *   - resize: (see targetSize)
+ *
+ * Returns { canvasW, canvasH, drawW, drawH, drawX, drawY, pad, padColor }
+ * where the source image is drawn at (drawX,drawY) sized drawW×drawH inside a
+ * canvasW×canvasH output. `pad` true means fill `padColor` first (letterbox).
+ * Never upscales the canvas past the source's usable resolution.
+ */
+export function computeLayout(srcW, srcH, output = {}) {
+  const aspect = output.aspect;
+  const srcAR = srcW / srcH;
+
+  let baseW = srcW;
+  let baseH = srcH;
+  let cover = true; // how the image fills the canvas (cover vs contain)
+  let pad = false;
+
+  if (aspect && aspect.mode === 'ratio') {
+    const ar = parseRatio(aspect.ratio);
+    if (aspect.fit === 'pad') {
+      cover = false;
+      pad = true;
+      if (srcAR > ar) {
+        baseW = srcW;
+        baseH = Math.round(srcW / ar);
+      } else {
+        baseH = srcH;
+        baseW = Math.round(srcH * ar);
+      }
+    } else {
+      // crop / cover
+      if (srcAR > ar) {
+        baseH = srcH;
+        baseW = Math.round(srcH * ar);
+      } else {
+        baseW = srcW;
+        baseH = Math.round(srcW / ar);
+      }
+    }
+  }
+
+  const sized = targetSize(baseW, baseH, output.resize);
+  const canvasW = sized.width;
+  const canvasH = sized.height;
+
+  const scale = cover
+    ? Math.max(canvasW / srcW, canvasH / srcH)
+    : Math.min(canvasW / srcW, canvasH / srcH);
+  const drawW = srcW * scale;
+  const drawH = srcH * scale;
+
+  return {
+    canvasW,
+    canvasH,
+    drawW,
+    drawH,
+    drawX: (canvasW - drawW) / 2,
+    drawY: (canvasH - drawH) / 2,
+    pad,
+    padColor: (aspect && aspect.padColor) || '#ffffff'
+  };
+}
+
 /**
  * Render `image` (ImageBitmap or canvas) with the watermark applied, returning
- * a new canvas. Output dimensions honour config.output.resize (if any); since
+ * a new canvas. Output geometry honours config.output (aspect + resize); since
  * all watermark sizes are relative, it stays proportional at any resolution.
  * assets: { logo?: ImageBitmap }
  */
 export function renderWatermarked(image, config, assets = {}) {
-  const { width: w, height: h } = targetSize(
-    image.width,
-    image.height,
-    config.output?.resize
-  );
-  const canvas = createCanvas(w, h);
+  const L = computeLayout(image.width, image.height, config.output);
+  const canvas = createCanvas(L.canvasW, L.canvasH);
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(image, 0, 0, w, h);
-  drawWatermark(ctx, w, h, config, assets);
+  if (L.pad) {
+    ctx.fillStyle = L.padColor;
+    ctx.fillRect(0, 0, L.canvasW, L.canvasH);
+  }
+  ctx.drawImage(image, L.drawX, L.drawY, L.drawW, L.drawH);
+  drawWatermark(ctx, L.canvasW, L.canvasH, config, assets);
   return canvas;
 }
 

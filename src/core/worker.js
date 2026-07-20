@@ -1,8 +1,9 @@
 // Batch export worker: receives files, renders the watermark at full
 // resolution on an OffscreenCanvas, posts back encoded blobs.
 
-import { renderWatermarked, canvasToBlob } from './watermark.js';
-import { resolveOutput } from '../export/format.js';
+import { renderWatermarked } from './watermark.js';
+import { resolveOutput, targetBytesOf } from '../export/format.js';
+import { encodeCanvas } from '../export/encode.js';
 
 let config = null;
 let logoBitmap = null;
@@ -34,7 +35,12 @@ self.onmessage = async (e) => {
       const canvas = renderWatermarked(bitmap, config, { logo: logoBitmap });
       bitmap.close();
       const out = resolveOutput(file.type, config.output);
-      const blob = await canvasToBlob(canvas, out.mime, out.quality);
+      const blob = await encodeCanvas(
+        canvas,
+        out.mime,
+        out.quality,
+        targetBytesOf(config.output)
+      );
       self.postMessage({ type: 'result', id, ok: true, blob });
     } catch (err) {
       self.postMessage({ type: 'result', id, ok: false, error: String(err) });

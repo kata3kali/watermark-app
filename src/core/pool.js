@@ -2,8 +2,9 @@
 // workers with OffscreenCanvas; falls back to sequential main-thread
 // processing when OffscreenCanvas / Worker are unavailable.
 
-import { renderWatermarked, canvasToBlob } from './watermark.js';
-import { resolveOutput, outputName } from '../export/format.js';
+import { renderWatermarked } from './watermark.js';
+import { resolveOutput, buildOutputName, targetBytesOf } from '../export/format.js';
+import { encodeCanvas } from '../export/encode.js';
 
 /**
  * Process `files` (File[]) with `config`. `logoBlob` is the raw logo blob
@@ -33,7 +34,14 @@ export function processBatch(files, config, logoBlob, { onProgress, onDone }) {
   const record = (i, ok, blob, error) => {
     if (ok) {
       const out = resolveOutput(files[i].type, config.output);
-      results[i] = { name: outputName(files[i].name, out.ext), blob };
+      const name = buildOutputName(
+        files[i].name,
+        out.ext,
+        i,
+        total,
+        config.output.rename
+      );
+      results[i] = { name, blob };
     } else {
       errors.push({ name: files[i].name, error });
     }
@@ -55,7 +63,12 @@ export function processBatch(files, config, logoBlob, { onProgress, onDone }) {
           const canvas = renderWatermarked(bitmap, config, { logo: logoBitmap });
           bitmap.close();
           const out = resolveOutput(files[i].type, config.output);
-          const blob = await canvasToBlob(canvas, out.mime, out.quality);
+          const blob = await encodeCanvas(
+            canvas,
+            out.mime,
+            out.quality,
+            targetBytesOf(config.output)
+          );
           record(i, true, blob);
         } catch (err) {
           record(i, false, null, String(err));
