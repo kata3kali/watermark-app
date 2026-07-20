@@ -1,5 +1,7 @@
 // Settings panel: wires all inputs to the config object.
 
+import { targetSize } from '../core/watermark.js';
+
 const $ = (id) => document.getElementById(id);
 
 /**
@@ -112,6 +114,52 @@ export function initControls({ config, onChange, onLogoFile, onLogoClear, onAppl
   });
   bind('out-quality', (el) => (config.output.quality = +el.value), 'out-quality-out', (v) => v);
 
+  // --- resize ---
+  const resizePxLabel = $('resize-px-label');
+  const resizePctLabel = $('resize-pct-label');
+  const outDims = $('out-dims');
+  let selectedSize = null; // { w, h } of the currently previewed image
+
+  const syncResizeUI = () => {
+    const mode = config.output.resize.mode;
+    resizePxLabel.hidden = mode !== 'longest';
+    resizePctLabel.hidden = mode !== 'percent';
+  };
+
+  const refreshOutputDims = () => {
+    if (!selectedSize) {
+      outDims.hidden = true;
+      return;
+    }
+    const { w, h } = selectedSize;
+    const t = targetSize(w, h, config.output.resize);
+    outDims.hidden = false;
+    outDims.textContent =
+      t.width === w && t.height === h
+        ? `Output: ${w} × ${h} px (unchanged)`
+        : `Output: ${w} × ${h} → ${t.width} × ${t.height} px`;
+  };
+
+  bind('out-resize', (el) => {
+    config.output.resize.mode = el.value;
+    syncResizeUI();
+    refreshOutputDims();
+  });
+  bind('out-resize-px', (el) => {
+    config.output.resize.maxLongest = +el.value;
+    refreshOutputDims();
+  });
+  bind(
+    'out-resize-pct',
+    (el) => {
+      config.output.resize.percent = +el.value;
+      refreshOutputDims();
+    },
+    'out-resize-pct-out',
+    (v) => `${v}%`
+  );
+  syncResizeUI();
+
   // --- apply ---
   const applyBtn = $('apply-all');
   applyBtn.addEventListener('click', onApply);
@@ -126,6 +174,10 @@ export function initControls({ config, onChange, onLogoFile, onLogoClear, onAppl
     setLogoLoaded(name) {
       $('logo-name').textContent = name ?? 'Upload logo (PNG/SVG)…';
       logoClear.hidden = !name;
+    },
+    setSelectedSize(size) {
+      selectedSize = size;
+      refreshOutputDims();
     }
   };
 }

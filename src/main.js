@@ -37,7 +37,11 @@ const config = {
     gapPct: 20,
     tilePattern: 'staggered' // 'staggered' | 'grid' | 'diagonal'
   },
-  output: { format: 'original', quality: 0.9 }
+  output: {
+    format: 'original',
+    quality: 0.9,
+    resize: { mode: 'none', maxLongest: 2000, percent: 75 }
+  }
 };
 
 // ---------- modules ----------
@@ -49,6 +53,9 @@ const preview = initPreview({
     config.position.mode = 'custom';
     config.position.custom = { x, y };
     controls.syncPositionUI();
+  },
+  onImageSize(size) {
+    controls.setSelectedSize(size);
   }
 });
 

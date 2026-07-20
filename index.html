@@ -147,6 +147,20 @@
         <label id="quality-label" hidden>Quality <output id="out-quality-out">0.9</output>
           <input id="out-quality" type="range" min="0.5" max="1" step="0.05" value="0.9" />
         </label>
+        <label>Resize
+          <select id="out-resize">
+            <option value="none" selected>No resize (keep original size)</option>
+            <option value="longest">Limit longest side (px)</option>
+            <option value="percent">Scale by percent</option>
+          </select>
+        </label>
+        <label id="resize-px-label" hidden>Max longest side (px)
+          <input id="out-resize-px" type="number" min="100" max="20000" step="50" value="2000" />
+        </label>
+        <label id="resize-pct-label" hidden>Scale <output id="out-resize-pct-out">75%</output>
+          <input id="out-resize-pct" type="range" min="10" max="100" step="5" value="75" />
+        </label>
+        <p id="out-dims" class="muted small" hidden></p>
 
         <button id="apply-all" class="btn-primary" disabled>Apply to all &amp; Download</button>
       </aside>

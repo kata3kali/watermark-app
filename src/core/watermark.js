@@ -25,15 +25,42 @@ export function canvasToBlob(canvas, type, quality) {
 }
 
 /**
- * Render `image` (ImageBitmap or canvas) at full resolution with the
- * watermark applied, returning a new canvas.
+ * Resolve output pixel dimensions for a source image, honouring the optional
+ * `resize` config. Only ever downscales — never enlarges past the source.
+ * resize: { mode: 'none'|'longest'|'percent', maxLongest, percent }.
+ */
+export function targetSize(srcW, srcH, resize) {
+  if (!resize || resize.mode === 'none') return { width: srcW, height: srcH };
+  let scale = 1;
+  if (resize.mode === 'longest') {
+    const cap = resize.maxLongest || 0;
+    const longest = Math.max(srcW, srcH);
+    if (cap > 0 && longest > cap) scale = cap / longest;
+  } else if (resize.mode === 'percent') {
+    scale = Math.max(0.01, Math.min(1, (resize.percent || 100) / 100));
+  }
+  return {
+    width: Math.max(1, Math.round(srcW * scale)),
+    height: Math.max(1, Math.round(srcH * scale))
+  };
+}
+
+/**
+ * Render `image` (ImageBitmap or canvas) with the watermark applied, returning
+ * a new canvas. Output dimensions honour config.output.resize (if any); since
+ * all watermark sizes are relative, it stays proportional at any resolution.
  * assets: { logo?: ImageBitmap }
  */
 export function renderWatermarked(image, config, assets = {}) {
-  const w = image.width;
-  const h = image.height;
+  const { width: w, height: h } = targetSize(
+    image.width,
+    image.height,
+    config.output?.resize
+  );
   const canvas = createCanvas(w, h);
   const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(image, 0, 0, w, h);
   drawWatermark(ctx, w, h, config, assets);
   return canvas;

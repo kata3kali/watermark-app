@@ -11,7 +11,7 @@ import { drawWatermark } from '../core/watermark.js';
  *   onCustomPosition(x, y)  — x/y are 0..1 fractions
  * }
  */
-export function initPreview({ getConfig, getLogo, onCustomPosition }) {
+export function initPreview({ getConfig, getLogo, onCustomPosition, onImageSize }) {
   const canvas = document.getElementById('preview-canvas');
   const empty = document.getElementById('preview-empty');
   const wrap = document.getElementById('preview-wrap');
@@ -101,6 +101,7 @@ export function initPreview({ getConfig, getLogo, onCustomPosition }) {
           bitmap = null;
         }
       }
+      onImageSize?.(bitmap ? { w: bitmap.width, h: bitmap.height } : null);
       render();
     }
   };
